@@ -1,0 +1,254 @@
+/*
+ * Hnefatafl (Copenhagen rules) - Styles
+ * Open source, Copyright Drew Gislason, MIT license
+ * https://mit-license.org
+ *
+ * Board: 13x13 table, outer border black, inner 11x11 white with black edges.
+ * Pieces as circles. King with cross.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: #2c3e50;
+  color: #ecf0f1;
+  margin: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+h1 {
+  margin: 0 0 8px 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+#game-container {
+  background: #1a252f;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* The 13x13 board table */
+#board {
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0 auto;
+  user-select: none;
+}
+
+#board td {
+  width: 42px;
+  height: 42px;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+  font-size: 18px;
+  padding: 0;
+}
+
+/* Outer border cells (black) */
+#board td.border {
+  background: #111;
+  color: #ddd;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: default;
+}
+
+#board td.border.corner {
+  background: #000;
+}
+
+/* Playing squares */
+#board td.square {
+  background: #f5f5f0;
+  border: 1px solid #333;
+  cursor: pointer;
+}
+
+#board td.square.restricted {
+  background: #e8e0d0;
+}
+
+#board td.square.selected {
+  background: #b0b0b0 !important; /* light grey scale as requested */
+}
+
+#board td.square.legal-target {
+  background: #c8e6c9;
+}
+
+#board td.square:hover:not(.selected) {
+  background: #e0e0d8;
+}
+
+/* Piece visuals */
+.piece {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  line-height: 32px;
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.piece.attacker {
+  background: #1a1a1a;
+  color: #1a1a1a;
+  border: 2px solid #444;
+}
+
+.piece.defender {
+  background: #f8f8f8;
+  color: #333;
+  border: 2px solid #222;
+}
+
+.piece.king {
+  background: #f0e68c; /* light gold */
+  color: #222;
+  border: 2px solid #8b4513;
+  position: relative;
+}
+
+.piece.king::after {
+  content: "✚";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  line-height: 32px;
+  font-size: 18px;
+}
+
+/* Empty restricted show Gebo rune */
+.gebo {
+  color: #888;
+  font-size: 22px;
+  opacity: 0.7;
+}
+
+/* Controls row */
+#controls {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
+}
+
+#controls button {
+  background: #34495e;
+  color: #ecf0f1;
+  border: 1px solid #5d6d7e;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#controls button:hover {
+  background: #3d566e;
+}
+
+#controls button:active {
+  background: #2c3e50;
+}
+
+#status {
+  flex: 1 1 100%;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 6px;
+  background: #273746;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+#status.invalid {
+  background: #922b21;
+  animation: blink 0.4s ease 2;
+}
+
+@keyframes blink {
+  50% { opacity: 0.4; }
+}
+
+#move-input-area {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#move-input {
+  flex: 1;
+  padding: 8px;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #5d6d7e;
+  background: #1c2833;
+  color: #ecf0f1;
+}
+
+#move-input::placeholder {
+  color: #7f8c8d;
+}
+
+#hen-area {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 560px;
+}
+
+#hen-area textarea {
+  width: 100%;
+  height: 140px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 12px;
+  background: #1c2833;
+  color: #bdc3c7;
+  border: 1px solid #5d6d7e;
+  border-radius: 4px;
+  padding: 8px;
+  resize: vertical;
+}
+
+.help {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  max-width: 560px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.help kbd {
+  background: #34495e;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hnefatafl – Copenhagen 11×11 (2 Players)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!--
+    Hnefatafl (Copenhagen rules) - Browser game
+    Open source, Copyright Drew Gislason, MIT license
+    https://mit-license.org
+
+    Initial version: Human vs Human only.
+    Files: index.html, styles.css, model.js, view.js, controller.js
+  -->
+
+  <h1>ᚺᚾᛖᚠᚨᛏᚨᚠᛚ &nbsp; Hnefatafl</h1>
+  <p class="subtitle">Copenhagen rules 11×11 &mdash; Two Human Players</p>
+
+  <div id="game-container">
+    <table id="board" aria-label="Hnefatafl board"></table>
+
+    <div id="controls">
+      <button id="btn-new" title="New game (N)">New Game</button>
+      <button id="btn-save" title="Save game in HEN (S)">Save</button>
+      <button id="btn-restore" title="Restore from HEN (R)">Restore</button>
+      <button id="btn-type" title="Game type (T)">2 Humans</button>
+      <button id="btn-quit" title="Quit (Q)">Quit</button>
+      <div id="status">Black's move</div>
+    </div>
+
+    <div id="move-input-area">
+      <input type="text" id="move-input" placeholder="Type move e.g. f2f3 or b2 then click" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="hen-area">
+      <textarea id="hen-output" placeholder="HEN notation appears here after Save. Paste here then click Restore to load a game."></textarea>
+    </div>
+  </div>
+
+  <p class="help">
+    <strong>How to play:</strong> Click a piece, then click its destination (legal squares highlight green).
+    Or type coordinates (e.g. <kbd>f2f3</kbd> or <kbd>b2</kbd> then click). Black (attackers) moves first.
+    Keys: <kbd>N</kbd>ew <kbd>S</kbd>ave <kbd>R</kbd>estore <kbd>T</kbd>ype <kbd>Q</kbd>uit <kbd>Esc</kbd> cancel.
+    King escapes to a corner (ᚷ). Capture by sandwich. See rules PDF for shieldwalls, exit forts, etc.
+  </p>
+
+  <script src="model.js"></script>
+  <script src="view.js"></script>
+  <script src="controller.js"></script>
+  <script>
+    // Bootstrap
+    document.addEventListener('DOMContentLoaded', function () {
+      const game = window.HnefataflModel.createGame();
+      window.HnefataflController.init(game);
+    });
+  </script>
+</body>
+</html>
