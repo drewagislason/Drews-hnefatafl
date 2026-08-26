@@ -17,7 +17,7 @@ const View = (function () {
 
   // Rune strings from instructions
   const HNEFATAFL_RUNES = 'ᚺᚾᛖᚠᚨᛏᚨᚠᛚ'; // 9 chars
-  //const FUTHARK_RUNES = 'ᚠᚢᚦᚨᚱᚲ'; // 6 chars
+  const FUTHARK_RUNES = 'ᚠᚢᚦᚨᚱᚲ'; // 6 chars
 
   function init(gameModel) {
     model = gameModel;
@@ -68,8 +68,8 @@ const View = (function () {
         else if (c === size + 1 && r >= 1 && r <= size) {
           td.className = 'border';
           // Center 6 runes in 11 rows (around middle)
-          if (r >= 2 && r <= 10) {
-            td.textContent = HNEFATAFL_RUNES[r - 2] || '';
+          if (r >= 3 && r <= 8) {
+            td.textContent = FUTHARK_RUNES[r - 3] || '';
           } else {
             td.textContent = '';
           }

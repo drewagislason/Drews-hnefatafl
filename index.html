@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hnefatafl – Copenhagen 11×11 (2 Players)</title>
+  <title>Hnefatafl – Copenhagen 11×11</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
     Open source, Copyright Drew Gislason, MIT license
     https://mit-license.org
 
-    Initial version: Human vs Human only.
-    Files: index.html, styles.css, model.js, view.js, controller.js
+    Files: index.html, styles.css, model.js, view.js, controller.js, ai.js
+    Game type (T): 2 Humans, 1 Player (you=Black), 2 Computers.
   -->
 
   <h1>ᚺᚾᛖᚠᚨᛏᚨᚠᛚ &nbsp; Hnefatafl</h1>
@@ -44,11 +44,13 @@
     <strong>How to play:</strong> Click a piece, then click its destination (legal squares highlight green).
     Or type coordinates (e.g. <kbd>f2f3</kbd> or <kbd>b2</kbd> then click). Black (attackers) moves first.
     Keys: <kbd>N</kbd>ew <kbd>S</kbd>ave <kbd>R</kbd>estore <kbd>T</kbd>ype <kbd>Q</kbd>uit <kbd>Esc</kbd> cancel.
+    Game type cycles 2 Humans → 1 Player (you=Black) → 2 Computers. 2-computer games move once per second.
     King escapes to a corner (ᚷ). Capture by sandwich. See rules PDF for shieldwalls, exit forts, etc.
   </p>
 
   <script src="model.js"></script>
   <script src="view.js"></script>
+  <script src="ai.js"></script>
   <script src="controller.js"></script>
   <script>
     // Bootstrap

@@ -3,40 +3,52 @@
  * Open source, Copyright Drew Gislason, MIT license
  * https://mit-license.org
  *
- * Handles all user input (mouse clicks, keyboard, buttons) and coordinates
- * Model + View. Game type is fixed to 2-human for this initial version.
+ * Handles user input and coordinates Model + View + AI.
+ * Game type is a tri-state toggle: 2 humans, 1 player (human vs computer),
+ * 2 computers. May be changed at any time, including mid-game.
+ *
+ * 1 player: you play Black (attackers, move first); the computer plays White.
+ * 2 computers: each side moves after HNEFATAFL_AI_DELAY_MS (default 1 second).
  */
 
 'use strict';
 
 const Controller = (function () {
   let model = null;
-  let keyBuffer = ''; // for typed coordinates e.g. "b2b3"
+  let keyBuffer = '';
   let keyTimeout = null;
+  let aiTimer = null;
+
+  // Tri-state: '2humans' | '1player' | '2computers'
+  let gameType = '2humans';
+  const GAME_TYPES = ['2humans', '1player', '2computers'];
+  const TYPE_LABELS = {
+    '2humans': '2 Humans',
+    '1player': '1 Player',
+    '2computers': '2 Computers'
+  };
 
   function init(gameModel) {
     model = gameModel;
     View.init(model);
     bindEvents();
+    updateTypeButton();
     View.render();
+    scheduleAI();
   }
 
   function bindEvents() {
-    // Board clicks
     const board = document.getElementById('board');
     board.addEventListener('click', onBoardClick);
 
-    // Buttons
     document.getElementById('btn-new').addEventListener('click', onNewGame);
     document.getElementById('btn-save').addEventListener('click', onSave);
     document.getElementById('btn-restore').addEventListener('click', onRestore);
     document.getElementById('btn-type').addEventListener('click', onGameType);
     document.getElementById('btn-quit').addEventListener('click', onQuit);
 
-    // Keyboard
     document.addEventListener('keydown', onKeyDown);
 
-    // Move input field (optional typed move)
     const moveInput = document.getElementById('move-input');
     if (moveInput) {
       moveInput.addEventListener('keydown', function (e) {
@@ -49,7 +61,82 @@ const Controller = (function () {
     }
   }
 
+  function updateTypeButton() {
+    const btn = document.getElementById('btn-type');
+    if (btn) btn.textContent = TYPE_LABELS[gameType] || gameType;
+    const sub = document.querySelector('.subtitle');
+    if (sub) {
+      if (gameType === '1player') {
+        sub.textContent = 'Copenhagen rules 11×11 — You are Black (attackers); computer is White';
+      } else if (gameType === '2computers') {
+        sub.textContent = 'Copenhagen rules 11×11 — Computer vs Computer';
+      } else {
+        sub.textContent = 'Copenhagen rules 11×11 — Two Human Players';
+      }
+    }
+  }
+
+  /**
+   * True when the side to move should be played by the AI.
+   */
+  function isComputerTurn() {
+    if (!model || model.isGameOver()) return false;
+    const t = model.getTurn();
+    if (gameType === '2computers') return true;
+    if (gameType === '1player') {
+      // Computer plays White (defenders)
+      return t === 'D';
+    }
+    return false;
+  }
+
+  function stopAI() {
+    if (aiTimer) {
+      clearTimeout(aiTimer);
+      aiTimer = null;
+    }
+  }
+
+  function aiDelayMs() {
+    if (typeof window !== 'undefined' && typeof window.HNEFATAFL_AI_DELAY_MS === 'number') {
+      return window.HNEFATAFL_AI_DELAY_MS;
+    }
+    return 1000;
+  }
+
+  function scheduleAI() {
+    stopAI();
+    if (!isComputerTurn()) return;
+    const ms = aiDelayMs();
+    aiTimer = setTimeout(playAIMove, ms);
+  }
+
+  function playAIMove() {
+    aiTimer = null;
+    if (!isComputerTurn() || !window.HnefataflAI) return;
+    const move = window.HnefataflAI.chooseMove(model);
+    if (move) {
+      const res = model.tryMove(move.fx, move.fy, move.tx, move.ty);
+      View.render();
+      if (res && res.message && String(res.message).toLowerCase().indexOf('invalid') !== -1) {
+        View.flashInvalid();
+      }
+      // Show which strategy the AI leaned on (useful when watching 2 computers)
+      const statusEl = document.getElementById('status');
+      if (statusEl && move.strategy && !model.isGameOver()) {
+        statusEl.textContent = model.getStatus() + '  ·  AI: ' + move.strategy;
+      }
+    }
+    scheduleAI();
+  }
+
+  function afterHumanAction() {
+    View.render();
+    scheduleAI();
+  }
+
   function onBoardClick(e) {
+    if (isComputerTurn()) return; // ignore clicks during a computer turn
     const td = e.target.closest('td.square');
     if (!td) return;
     const x = parseInt(td.dataset.x, 10);
@@ -61,22 +148,25 @@ const Controller = (function () {
     if (result.message && result.message.toLowerCase().includes('invalid')) {
       View.flashInvalid();
     }
-    // if move succeeded and status updated, ok
+    scheduleAI();
   }
 
   function onNewGame() {
-    if (confirm('Start a new game? Current progress will be lost.')) {
-      model.newGame();
-      keyBuffer = '';
-      View.render();
-      View.showHEN('');
+    if (!confirm('Start a new game? Current progress will be lost.')) return;
+    stopAI();
+    model.newGame();
+    keyBuffer = '';
+    if (window.HnefataflAI && window.HnefataflAI.resetPersonality) {
+      window.HnefataflAI.resetPersonality();
     }
+    View.render();
+    View.showHEN('');
+    scheduleAI();
   }
 
   function onSave() {
     const hen = model.toHEN();
     View.showHEN(hen);
-    // Also offer download
     try {
       const blob = new Blob([hen], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -86,7 +176,6 @@ const Controller = (function () {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      // fallback already showed in textarea
       console.warn('Download failed, use the textarea', err);
     }
   }
@@ -101,30 +190,30 @@ const Controller = (function () {
     if (ok) {
       View.render();
       alert('Game restored from HEN.');
+      scheduleAI();
     } else {
       alert('Could not parse HEN. Check the format (human board graphic preferred).');
     }
   }
 
   function onGameType() {
-    // Initial version: only 2 humans supported
-    alert('This initial version supports 2 Human players only.\nAI (1 player / 2 computers) will be added after testing.');
+    // Cycle 2 humans → 1 player → 2 computers → 2 humans
+    const idx = GAME_TYPES.indexOf(gameType);
+    gameType = GAME_TYPES[(idx + 1) % GAME_TYPES.length];
+    updateTypeButton();
+    // Deselect any human selection when switching
+    const sel = model.getSelected();
+    if (sel) model.selectSquare(sel.x, sel.y);
+    View.render();
+    scheduleAI();
   }
 
   function onQuit() {
+    stopAI();
     alert('To quit, simply close this browser tab or window.');
-    // window.close() only works if opened by script
   }
 
-  /**
-   * Keyboard handling:
-   * - N new, S save, R restore, T type, Q quit
-   * - Letters/numbers build algebraic move (e.g. type b2 then b3 or b2b3)
-   * - Enter confirms a full move from buffer
-   * - Escape clears selection / buffer
-   */
   function onKeyDown(e) {
-    // Ignore if typing in textarea or input
     if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
       return;
     }
@@ -132,7 +221,6 @@ const Controller = (function () {
     const key = e.key;
     const lower = key.toLowerCase();
 
-    // Global shortcuts
     if (lower === 'n' && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
       onNewGame();
@@ -161,28 +249,23 @@ const Controller = (function () {
     if (key === 'Escape') {
       e.preventDefault();
       keyBuffer = '';
-      // deselect
       const sel = model.getSelected();
-      if (sel) {
-        model.selectSquare(sel.x, sel.y); // toggle off
-      }
+      if (sel) model.selectSquare(sel.x, sel.y);
       View.render();
       return;
     }
 
-    // Coordinate entry: a-k, 1-9, x, l  (and maybe digits)
+    if (isComputerTurn()) return;
+
     if (/^[a-kA-K1-9xXlL]$/.test(key)) {
       e.preventDefault();
       keyBuffer += lower;
-      // Auto try when buffer looks complete (4+ chars like b2b3 or f2f3)
       if (keyBuffer.length >= 4) {
-        // try parse as from+to
         tryTypedMove(keyBuffer);
         keyBuffer = '';
       } else {
-        // timeout clear
         clearTimeout(keyTimeout);
-        keyTimeout = setTimeout(() => { keyBuffer = ''; }, 2500);
+        keyTimeout = setTimeout(function () { keyBuffer = ''; }, 2500);
       }
       return;
     }
@@ -194,15 +277,12 @@ const Controller = (function () {
     }
   }
 
-  /**
-   * Try to interpret a string as a move: "b2b3", "b2-b3", "b2 b3", or just "b2" to select
-   */
   function tryTypedMove(str) {
+    if (isComputerTurn()) return;
     str = str.replace(/[\s\-]/g, '').toLowerCase();
     if (str.length < 2) return;
 
-    // If exactly one square: select it
-    if (str.length <= 3) { // e.g. "b2", "fX", "a10" no, max 3
+    if (str.length <= 3) {
       const pos = model.fromAlgebraic(str);
       if (pos) {
         const res = model.selectSquare(pos.x, pos.y);
@@ -210,12 +290,11 @@ const Controller = (function () {
         if (res.message && res.message.toLowerCase().includes('invalid')) {
           View.flashInvalid();
         }
+        scheduleAI();
         return;
       }
     }
 
-    // Full move: first 2-3 chars from, rest to
-    // Try common lengths: 2+2, 2+3, 3+2, 3+3
     for (let split = 2; split <= 3; split++) {
       if (str.length < split + 2) continue;
       const fromStr = str.slice(0, split);
@@ -223,23 +302,27 @@ const Controller = (function () {
       const from = model.fromAlgebraic(fromStr);
       const to = model.fromAlgebraic(toStr);
       if (from && to) {
-        // Prefer direct tryMove if nothing selected, or use select flow
         const res = model.tryMove(from.x, from.y, to.x, to.y);
         View.render();
-        if (!res.ok) {
-          View.flashInvalid();
-        }
+        if (!res.ok) View.flashInvalid();
+        scheduleAI();
         return;
       }
     }
-    // failed
     View.flashInvalid();
-    model; // keep status
     View.render();
   }
 
   return {
-    init
+    init: init,
+    getGameType: function () { return gameType; },
+    setGameType: function (t) {
+      if (GAME_TYPES.indexOf(t) !== -1) {
+        gameType = t;
+        updateTypeButton();
+        scheduleAI();
+      }
+    }
   };
 })();
 

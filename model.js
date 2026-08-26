@@ -7,7 +7,7 @@
  * capture (including shieldwalls), win conditions, HEN notation.
  * No DOM or UI code. View and Controller depend on this, not vice versa.
  *
- * Board coordinates (like a chess board, but with 11 rows/cols):
+ * Board coordinates:
  *   x = 0..10  (files a..k)
  *   y = 0..10  (ranks L..1 from top to bottom; y=0 is rank L, y=10 is rank 1)
  *
@@ -52,9 +52,10 @@ function createEmptyBoard() {
 function createInitialBoard() {
   const board = createEmptyBoard();
 
-  // Attackers - top side (y=0): c d e f g  (x=3..7)
+  // Attackers - top side (y=0 / rank L): d e f g h  (x=3..7)
+  // Layout: L ...vvvvv...  (three empty, five attackers, three empty)
   for (let x = 3; x <= 7; x++) board[0][x] = 'A';
-  // Attackers - bottom side (y=10)
+  // Attackers - bottom side (y=10 / rank 1): same pattern
   for (let x = 3; x <= 7; x++) board[10][x] = 'A';
   // Attackers - left side (x=0): rows 3..7 (y=3..7)
   for (let y = 3; y <= 7; y++) board[y][0] = 'A';
@@ -758,6 +759,61 @@ function createGame() {
   }
 
   /**
+   * All legal moves for the side to move.
+   * Each entry: { fx, fy, tx, ty }
+   */
+  function getAllLegalMoves() {
+    const moves = [];
+    if (gameOver) return moves;
+    for (let y = 0; y < BOARD_SIZE; y++) {
+      for (let x = 0; x < BOARD_SIZE; x++) {
+        const p = getPiece(x, y);
+        if (!p) continue;
+        if (turn === 'A' && p !== 'A') continue;
+        if (turn === 'D' && p !== 'D' && p !== 'K') continue;
+        const dests = getLegalMoves(x, y);
+        for (let i = 0; i < dests.length; i++) {
+          moves.push({ fx: x, fy: y, tx: dests[i].x, ty: dests[i].y });
+        }
+      }
+    }
+    return moves;
+  }
+
+  /**
+   * Replace internal state (used by clone and by the AI search).
+   */
+  function loadSnapshot(snap) {
+    board = snap.board.map(function (row) { return row.slice(); });
+    turn = snap.turn;
+    selected = null;
+    moveList = snap.moveList ? snap.moveList.slice() : [];
+    positionHistory = snap.positionHistory ? snap.positionHistory.slice() : [];
+    status = snap.status || ((turn === 'A') ? "Black's move" : "White's move");
+    gameOver = !!snap.gameOver;
+    winner = snap.winner || null;
+    lastMoveWasCapture = !!snap.lastMoveWasCapture;
+  }
+
+  /**
+   * Deep-copy this game into a new model instance (no shared arrays).
+   */
+  function clone() {
+    const g = createGame();
+    g.loadSnapshot({
+      board: board,
+      turn: turn,
+      moveList: moveList,
+      positionHistory: positionHistory,
+      status: status,
+      gameOver: gameOver,
+      winner: winner,
+      lastMoveWasCapture: lastMoveWasCapture
+    });
+    return g;
+  }
+
+  /**
    * New game
    */
   function newGame() {
@@ -960,7 +1016,10 @@ function createGame() {
     selectSquare,
     tryMove,
     getLegalMoves,
+    getAllLegalMoves,
     isLegalMove,
+    clone,
+    loadSnapshot,
     toAlgebraic,
     fromAlgebraic,
     toHEN,
