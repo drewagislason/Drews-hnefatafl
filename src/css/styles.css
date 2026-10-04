@@ -1,0 +1,374 @@
+/*
+ * Open Source — Copyright Drew Gislason
+ * MIT License — https://mit-license.org
+ *
+ * Stage 1 visual styles — mobile-first Copenhagen 11×11 layout.
+ * Palette sampled from Hnefatafl_Board.png mockup.
+ */
+
+/* ---------- Design tokens ---------- */
+:root {
+  --page-bg: #1a2332;
+  --board-cell: #f2f0e8;
+  --board-line: #1a1a1a;
+  --chrome-bg: #0a0a0a;
+  --chrome-text: #ffffff;
+  --throne-bg: #e8d9a8;
+  --gebo-empty: #9a9588;
+  --piece-attacker: #1a1a1a;
+  --piece-defender: #f7f5ef;
+  --piece-shadow: rgba(0, 0, 0, 0.45);
+  --btn-bg: #2a3548;
+  --btn-border: #8aa0b8;
+  --btn-text: #f0f4f8;
+  --status-bg: #121820;
+  --status-text: #e8eef5;
+  --hen-bg: #0f141c;
+  --hen-text: #c8d0da;
+  --hen-border: #3a4558;
+  --radius-btn: 6px;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ---------- Reset / page ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--page-bg);
+  color: var(--chrome-text);
+  font-family: var(--font-ui);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  width: 100%;
+  max-width: 560px;
+  padding: 0.75rem 0.6rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+/* ---------- Board wrapper (keeps board square & fits width) ---------- */
+.board-wrap {
+  width: 100%;
+  /* Aspect trick: square based on available width */
+  aspect-ratio: 1 / 1;
+  max-height: min(100vw - 1.2rem, 560px);
+  margin: 0 auto;
+}
+
+.board {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  /* 13×13: thin chrome ring + equal playable cells */
+  grid-template-columns: 1.15fr repeat(11, 1fr) 1.15fr;
+  grid-template-rows: 1.15fr repeat(11, 1fr) 1.15fr;
+  background: var(--chrome-bg);
+  border: 2px solid #000;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+  user-select: none;
+}
+
+/* ---------- Chrome (outer black border cells) ---------- */
+.chrome {
+  background: var(--chrome-bg);
+  color: var(--chrome-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: clamp(0.55rem, 2.4vw, 0.85rem);
+  line-height: 1;
+}
+
+.chrome--corner {
+  /* empty black chrome corners */
+}
+
+.chrome--top {
+  font-size: clamp(0.55rem, 2.6vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.chrome--rank,
+.chrome--file {
+  font-variant-numeric: tabular-nums;
+}
+
+.chrome--rune {
+  font-size: clamp(0.65rem, 2.8vw, 0.95rem);
+  font-weight: 500;
+  color: #e8e0d0;
+}
+
+/* ---------- Playable cells ---------- */
+.cell {
+  position: relative;
+  background: var(--board-cell);
+  border: 1px solid var(--board-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cell--restricted,
+.cell--throne {
+  background: var(--throne-bg);
+}
+
+.cell__gebo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.7rem, 3.5vw, 1.15rem);
+  color: var(--gebo-empty);
+  opacity: 0.7;
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* ---------- Pieces ---------- */
+.piece {
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  box-shadow: 1px 2px 3px var(--piece-shadow);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.piece--attacker {
+  background: var(--piece-attacker);
+  border: 1px solid #000;
+}
+
+.piece--defender {
+  background: var(--piece-defender);
+  border: 1px solid #555;
+}
+
+.piece--king {
+  background: var(--piece-defender);
+  border: 1.5px solid #333;
+}
+
+.piece__gebo {
+  color: #111;
+  font-size: clamp(0.55rem, 2.8vw, 0.95rem);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ---------- Controls ----------
+   Mobile first: two full-width rows. Four short buttons share equal
+   tracks; Who spans two so "Who: White vs AI" fits.
+   Tablet and up: one row, same idea (Who about twice as wide). */
+.controls {
+  display: grid;
+  width: 100%;
+  gap: 0.4rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.35rem;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: 1.5px solid var(--btn-border);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #c9b896;
+  outline-offset: 2px;
+}
+
+.btn--who {
+  grid-column: span 2;
+}
+
+/* Keyboard-hint letter (N / S / R) */
+.btn__hint {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Status bar (full width under buttons) ---------- */
+.status-bar {
+  background: var(--status-bg);
+  color: var(--status-text);
+  border: 1px solid #2a3344;
+  border-radius: var(--radius-btn);
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  font-size: clamp(0.85rem, 3vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.status-bar__text {
+  display: inline-block;
+}
+
+/* ---------- HEN panel ---------- */
+.hen-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hen-panel__label {
+  font-size: 0.75rem;
+  color: #8a96a8;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hen-panel__text {
+  width: 100%;
+  min-height: 10rem;
+  max-height: 18rem;
+  resize: vertical;
+  background: var(--hen-bg);
+  color: var(--hen-text);
+  border: 1px solid var(--hen-border);
+  border-radius: var(--radius-btn);
+  padding: 0.6rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: clamp(0.65rem, 2.2vw, 0.78rem);
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.hen-panel__text:focus {
+  outline: 2px solid #3a4558;
+  outline-offset: 1px;
+}
+
+.copyright {
+  margin: 0.15rem 0 0;
+  text-align: center;
+  color: #ffffff;
+  font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Wider screens ---------- */
+@media (min-width: 480px) {
+  #app {
+    padding: 1rem 1rem 2rem;
+    gap: 0.75rem;
+  }
+}
+
+/* One row once "New Game" and "Who: White vs AI" both fit. */
+@media (min-width: 640px) {
+  .controls {
+    grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
+  }
+
+  .btn {
+    min-height: 2.6rem;
+    padding: 0.55rem 0.45rem;
+    font-size: 0.95rem;
+  }
+
+  .btn--who {
+    grid-column: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  #app {
+    max-width: 640px;
+  }
+
+  .board-wrap {
+    max-height: min(100vw - 2rem, 640px);
+  }
+}
+
+/* ---------- Stage 2 interaction ---------- */
+.btn:hover {
+  filter: brightness(1.12);
+}
+
+.btn:active {
+  filter: brightness(0.92);
+}
+
+.cell {
+  cursor: pointer;
+}
+
+.cell--selected {
+  background: #b0b0b0 !important;
+  box-shadow: inset 0 0 0 2px #555;
+}
+
+.cell--legal {
+  background: #c8e6c9 !important;
+}
+
+.cell--legal.cell--restricted,
+.cell--legal.cell--throne {
+  background: #d4e8c4 !important;
+}
+
+.status-bar--invalid {
+  background: #922b21;
+  animation: hnef-blink 0.4s ease 2;
+}
+
+@keyframes hnef-blink {
+  50% { opacity: 0.45; }
+}
+
+.hen-panel__text {
+  /* Editable for Restore paste; still looks like a live readout */
+  caret-color: var(--hen-text);
+}

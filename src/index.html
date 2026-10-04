@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--
+  Open Source — Copyright Drew Gislason
+  MIT License — https://mit-license.org
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Hnefatafl — Copenhagen rules 11×11. Stage 3: playable with medium AI (human vs AI, AI vs AI)." />
+  <title>Hnefatafl by Gislason — Copenhagen 11×11</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- App root: board, buttons, status, HEN filled by JS -->
+  <div id="app"></div>
+
+  <!-- Classic scripts (no ES modules) — works on file:// and GitHub Pages -->
+  <script src="js/model.js"></script>
+  <script src="js/hen.js"></script>
+  <script src="js/view.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/controller.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var game = window.HnefataflModel.createGame();
+      window.HnefataflController.init(game);
+    });
+  </script>
+</body>
+</html>
