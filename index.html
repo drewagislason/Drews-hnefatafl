@@ -9,18 +9,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="description" content="Hnefatafl — Copenhagen rules 11×11. Stage 3: playable with medium AI (human vs AI, AI vs AI)." />
   <title>Hnefatafl by Gislason — Copenhagen 11×11</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <!-- App root: board, buttons, status, HEN filled by JS -->
   <div id="app"></div>
 
   <!-- Classic scripts (no ES modules) — works on file:// and GitHub Pages -->
-  <script src="js/model.js"></script>
-  <script src="js/hen.js"></script>
-  <script src="js/view.js"></script>
-  <script src="js/ai.js"></script>
-  <script src="js/controller.js"></script>
+  <script src="model.js"></script>
+  <script src="hen.js"></script>
+  <script src="view.js"></script>
+  <script src="ai.js"></script>
+  <script src="controller.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var game = window.HnefataflModel.createGame();
